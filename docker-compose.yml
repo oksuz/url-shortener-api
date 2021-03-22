@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  webserver:
+    image: nginx:stable-alpine
+    ports:
+      - 8080:8080
+    volumes:
+      - ./nginx/urlshortener.conf:/etc/nginx/conf.d/urlshortener.conf
+    depends_on:
+      - backend
+
+  mysql:
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: r00tpassw0r4
+
+  backend:
+    entrypoint: /opt/app/bin/dockercompose-entrypoint.sh
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+    environment:
+      APP_ENV: prod
+      DB_PASSWORD: r00tpassw0r4
+      DB_USER: root
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: url_shortener
+      BITLY_TOKEN: bitly-token
+      APP_SECRET: s3cr3t
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+          memory: 1g
